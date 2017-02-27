@@ -1,4 +1,5 @@
-#ifdef _MSC_VER
+// Skulstad, Vegard Nygaard Student nr: 745790  16HBITSECA
+#ifdef _MSC_VER	
 #define _CRT_SECURE_NO_WARNINGS
 #endif 
 
@@ -183,7 +184,9 @@ public:
 
 	Ansatt(int n, ifstream & inn) : Voksen(inn) {
 		adresse = new char[MAXTXT];
-		inn >> nr >> antBarn >> adresse;
+		inn >> nr >> antBarn;
+		inn.ignore();
+		inn.getline(adresse, MAXTXT);
 		bool harPartner;
 		inn >> harPartner;
 		harPartner ? partner = new Partner(inn) : 0;
@@ -202,7 +205,7 @@ public:
 
 	void skrivTilFil(ofstream & ut) {
 		Voksen::skrivTilFil(ut);
-		ut << nr << " " << antBarn << " " << adresse << " ";
+		ut << nr << " " << antBarn << endl << adresse << endl;
 		if (partner != nullptr) {
 			ut << 1 << " ";
 			partner->skrivTilFil(ut);
@@ -217,7 +220,6 @@ public:
 		Voksen::display();
 		cout << adresse << endl;
 		if (partner != nullptr) {
-			cout << "Skriver partner som ikke er null: " << endl;
 			partner->display();
 		}
 		// Skriver alle barna til skjermen
