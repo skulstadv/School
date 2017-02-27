@@ -22,6 +22,7 @@ char les();
 int finnesAllerede(int nr);
 int les(char* t, int min, int max);
 void les(char* t, char* s, bool dato);
+void lesDato(char* t, char* s);
 void lesFraFil();
 void skrivTilFil();
 void nyAnsatt();
@@ -331,12 +332,14 @@ void les(char* s, char* t, bool dato) {
 	strcpy_s(t, len, temp);
 }
 
+
 void lesDato(char* s, char* t) {
 	char temp[5];
 	cout << s << endl;
 	cin.getline(temp, 5);
 	strcpy_s(t, 5, temp);
 }
+
 
 //  Leter etter en ansatt med et gitt nummer og returnerer indeks i ansatt
 int finnesAllerede(int nr) {
