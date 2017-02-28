@@ -24,6 +24,7 @@ int finnesAllerede(int nr);
 int les(char* t, int min, int max);
 void les(char* t, char* s, bool dato);
 void lesDato(char* t, char* s);
+void smettInn();
 void lesFraFil();
 void skrivTilFil();
 void nyAnsatt();
@@ -41,22 +42,28 @@ protected:
 
 public:
 	Person() {
-		fornavn = new char[MAXTXT];
-		les("Skriv inn fornavn: ", fornavn, false);
+		char buff[MAXTXT];
+		les("Skriv inn fornavn: ", buff, false);
 		les("Skriv inn dato [AAMMDD]: ", fodselsdato, true);
+		fornavn = new char[strlen(buff) + 1];
+		strcpy_s(fornavn, strlen(buff) + 1, buff);
 	}
 
 	Person(ifstream & inn) {
-		fornavn = new char[MAXTXT];
-		inn >> fornavn >> fodselsdato;
+		char buff[MAXTXT];
+		inn.ignore();
+		inn.getline(buff, MAXTXT);
+		fornavn = new char[strlen(buff) + 1];
+		strcpy_s(fornavn, strlen(buff) + 1, buff);
+		inn >> fodselsdato;
 	}
 
 	~Person() {
-		delete fornavn;
+		delete[] fornavn;
 	}
 
 	void skrivTilFil(ofstream & ut) {
-		ut << fornavn << " " << fodselsdato << " ";
+		ut << endl << fornavn << endl << fodselsdato << endl;
 	}
 
 	void display() {
@@ -86,14 +93,17 @@ public:
 	}
 
 	Barn(ifstream & inn) : Person(inn) {
-		bool erGutt;
+		int erGutt;
 		inn >> erGutt;
-		erGutt ? kjonn = gutt : kjonn = jente;
+		if (erGutt)
+			kjonn = gutt;
+		else
+			kjonn = jente;
 	}
 
 	void skrivTilFil(ofstream & ut) {
 		Person::skrivTilFil(ut);
-		ut << (int)kjonn << " ";
+		ut << (int)kjonn;
 	}
 
 	void display() {
@@ -112,22 +122,27 @@ protected:
 
 public:
 	Voksen() : Person() {
-		etternavn = new char[MAXTXT];
-		les("Skriv etternavn: ", etternavn, false);
+		char buff[MAXTXT];
+		les("Skriv etternavn: ", buff, false);
+		etternavn = new char[strlen(buff) + 1];
+		strcpy_s(etternavn, strlen(buff) + 1, buff);
 	}
 
 	Voksen(ifstream & inn) : Person(inn) {
-		etternavn = new char[MAXTXT];
-		inn >> etternavn;
+		char buff[MAXTXT];
+		inn.ignore();
+		inn.getline(buff, MAXTXT);
+		etternavn = new char[strlen(buff) + 1];
+		strcpy_s(etternavn, strlen(buff) + 1, buff);
 	}
 
 	~Voksen() {
-		delete etternavn;
+		delete[] etternavn;
 	}
 
 	void skrivTilFil(ofstream & ut) {
 		Person::skrivTilFil(ut);
-		ut << etternavn << " ";
+		ut << etternavn << endl;
 	}
 
 	void display() {
@@ -154,7 +169,7 @@ public:
 
 	void skrivTilFil(ofstream & ut) {
 		Voksen::skrivTilFil(ut);
-		ut << telefon1 << " " << telefon2 << " ";
+		ut << telefon1 << " " << telefon2;
 	}
 
 	void display() {
@@ -174,28 +189,34 @@ private:
 
 public:
 	Ansatt(int n) : Voksen() {
-		adresse = new char[MAXTXT];
-		this->nr = n;
+		char buff[MAXTXT];
+		les("Skriv din adresse: ", buff, false);
+		adresse = new char[strlen(buff) + 1];
+		strcpy_s(adresse, strlen(buff) + 1, buff);
+		nr = n;
 		antBarn = 0;
 		// NULL for aa ha muligheten til aa sjekke om partner er initialisert
 		partner = NULL;
-		les("Skriv din adresse: ", adresse, false);
 	}
 
 	Ansatt(int n, ifstream & inn) : Voksen(inn) {
-		adresse = new char[MAXTXT];
-		inn >> nr >> antBarn;
+		nr = n;
+		char buff[MAXTXT];
+		inn >> antBarn;
 		inn.ignore();
-		inn.getline(adresse, MAXTXT);
+		inn.getline(buff, MAXTXT);
+		adresse = new char[strlen(buff) + 1];
+		strcpy_s(adresse, strlen(buff) + 1, buff);
 		bool harPartner;
 		inn >> harPartner;
-		harPartner ? partner = new Partner(inn) : 0;
+		if (harPartner)
+			partner = new Partner(inn);
 		for (int i = 1; i <= antBarn; i++)
 			barn[i] = new Barn(inn);
 	}
 
 	~Ansatt() {
-		delete adresse;
+		delete[] adresse;
 		delete partner;
 		// Sletter alle barna
 		for (int i = 1; i <= antBarn; i++) {
@@ -205,15 +226,16 @@ public:
 
 	void skrivTilFil(ofstream & ut) {
 		Voksen::skrivTilFil(ut);
-		ut << nr << " " << antBarn << endl << adresse << endl;
+		ut << antBarn << endl << adresse << endl;
 		if (partner != nullptr) {
-			ut << 1 << " ";
+			ut << 1;
 			partner->skrivTilFil(ut);
 		}
 		else
-			ut << 0 << " ";
+			ut << 0;
 		for (int i = 1; i <= antBarn; i++)
 			barn[i]->skrivTilFil(ut);
+		ut << endl;
 	}
 
 	void display() {
@@ -229,16 +251,14 @@ public:
 		cout << endl << endl;
 	}
 
-	// Bytter partner til ny partner og returnerer adressen til gammel
-	Partner * setPartner(Partner * partner) {
-		// Tar vare pa gammel partner
-		Partner * ret = this->partner;
-		this->partner = partner;
-		return ret;
+	void newPartner() {
+		delete partner;
+		partner = new Partner();
 	}
 
-	Partner * getPartner() {
-		return partner;
+	void deletePartner() {
+		delete partner;
+		partner = NULL;
 	}
 
 	int getNumber() {
@@ -281,8 +301,9 @@ int main() {
 		default:  skrivMeny();      break;   //  Meny 
 		}
 		kommando = les();	//  Leser brukerens ›nske/valg.
-		skrivTilFil();
+		//skrivTilFil();
 	}
+	skrivTilFil();
 	return 0;
 }
 
@@ -355,10 +376,10 @@ int finnesAllerede(int nr) {
 
 void skrivTilFil() {
 	ofstream ut = ofstream("output.txt");
-	ut << sisteBrukt << " ";
+	ut << sisteBrukt << endl;
 	// Gaar gjennom alle ansatte og kaller skrivTilFil
 	for (int i = 1; i <= sisteBrukt; i++) {
-		ut << ansatte[i]->getNumber() << " ";
+		ut << ansatte[i]->getNumber();
 		ansatte[i]->skrivTilFil(ut);
 	}
 	ut.close();
@@ -387,17 +408,38 @@ void lesFraFil() {
 void nyAnsatt() {
 	int nr = les("Skriv inn ansattnummer: ", 1, 100);
 	// Sjekker at ansattnr ikke er i bruk og at vi har plass til en til ansatt
-	!finnesAllerede(nr) && sisteBrukt < MAXANS ? 
-		ansatte[++sisteBrukt] = new Ansatt(nr) : 0;
+	if (!finnesAllerede(nr) && sisteBrukt < MAXANS){
+		ansatte[++sisteBrukt] = new Ansatt(nr);
+		smettInn();
+	}
+	else
+		cout << "Dette ansattnr er allerede i bruk";
+}
+
+
+// Ordner ansatte[] rekursivt. Kalles etter en ny ansatt settes inn
+void smettInn() {
+	Ansatt * temp;
+	int nr = ansatte[sisteBrukt]->getNumber();
+	for (int i = 1; i <= sisteBrukt; i++) {
+		if (ansatte[sisteBrukt]->getNumber() < ansatte[i]->getNumber()) {
+			// Bytter sisteBrukt med ansatte[i] og kaller seg selv
+			temp = ansatte[i];
+			ansatte[i] = ansatte[sisteBrukt];
+			ansatte[sisteBrukt] = temp;
+			smettInn();
+		}
+	}
 }
 
 
 void partnerEndring() {
 	int nr = les("Skriv ansatt nr du vil endre partner pa: ", 1, 100);
-	if (finnesAllerede(nr)) {
+	int index = finnesAllerede(nr);
+	if (index) {
 		switch (les("Velg 0 for a endre eller opprette, 1 for a slette: ", 0, 1)) {
-		case 0: delete ansatte[finnesAllerede(nr)]->setPartner(new Partner()); break;
-		case 1: delete ansatte[finnesAllerede(nr)]->setPartner(NULL); break;
+		case 0: ansatte[index]->newPartner(); break;
+		case 1: ansatte[index]->deletePartner(); break;
 		default: break;
 		}
 	}
@@ -419,7 +461,11 @@ void nyttBarn() {
 // Skriver data om ansatt hvis den eksisterer
 void dataOmAnsatt() {
 	int id = les("Skriv AnsattNR: ", 1, 100);
-	finnesAllerede(id) ? ansatte[finnesAllerede(id)]->display():0;
+	int index = finnesAllerede(id);
+	if (index)
+		ansatte[index]->display();
+	else
+		cout << "Fant ikke ansatt med dette ansattnr";
 }
 
 
@@ -437,9 +483,10 @@ void alleEttAar() {
 
 void fjernAnsatt() {
 	int n = les("Skriv inn nr du vil slette: ", 1, 100);
-	if (finnesAllerede(n)) {
-		Ansatt * temp = ansatte[finnesAllerede(n)];
-		ansatte[finnesAllerede(n)] = ansatte[sisteBrukt--];
+	int index = finnesAllerede(n);
+	if (index) {
+		Ansatt * temp = ansatte[index];
+		ansatte[index] = ansatte[sisteBrukt--];
 		delete temp;
 		cout << "Ansatt fjernet";
 	}
