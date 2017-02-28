@@ -301,9 +301,8 @@ int main() {
 		default:  skrivMeny();      break;   //  Meny 
 		}
 		kommando = les();	//  Leser brukerens ›nske/valg.
-		//skrivTilFil();
+		skrivTilFil();
 	}
-	skrivTilFil();
 	return 0;
 }
 
